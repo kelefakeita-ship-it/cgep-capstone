@@ -19,7 +19,6 @@ auditable without human interpretation.
 **Controls enforced:** SC-28, AU-3, AU-6, CM-6, AC-3  
 **What I built:** A Terraform primitive that deploys an AWS S3 bucket with AES-256 encryption, 
 versioning, access logging, and public access blocked. Evidence captured as machine-readable JSON.  
-**Time:** 30–45 min  
 - `terraform/primitives/compliant-s3/`
 - `evidence/lab-2-3/`
 
@@ -28,7 +27,6 @@ versioning, access logging, and public access blocked. Evidence captured as mach
 **What I built:** A reusable Terraform module on GCP that enforces CMEK encryption with 90-day 
 key rotation, versioning, retention policies, and required compliance labels. Consumers cannot 
 disable the security floor.  
-**Time:** 45–60 min  
 - `terraform/modules/compliant-gcs-bucket/`
 - `terraform/consumers/dev/`
 - `evidence/lab-2-4/`
@@ -37,7 +35,6 @@ disable the security floor.
 **Controls enforced:** SC-28, AU-9  
 **What I built:** An S3 Object Lock vault that refuses deletion by design. Evidence bundles from 
 Lab 2.3 are hashed, bundled, and uploaded with a recorded VersionId — immutable by design.  
-**Time:** 45 min  
 - `terraform/primitives/evidence-vault/`
 - `scripts/capture-evidence.sh`
 - `evidence/lab-2-5/`
@@ -46,7 +43,6 @@ Lab 2.3 are hashed, bundled, and uploaded with a recorded VersionId — immutabl
 **Controls enforced:** SC-28, AC-3, CM-6  
 **What I built:** Three Rego policies against GCP fixtures, each mapped to a NIST 800-53 control, 
 with `_test.rego` fixtures and a real `terraform plan -json` run. 8/8 unit tests passing.  
-**Time:** 60–75 min  
 - `policies/`
 - `evidence/lab-3-3/`
 
@@ -54,7 +50,6 @@ with `_test.rego` fixtures and a real `terraform plan -json` run. 8/8 unit tests
 **Controls enforced:** SC-28, AC-3, CM-6  
 **What I built:** Conftest wired into the Terraform plan workflow as a fail-closed gate. Added 
 AWS variants of SC-28 and AC-3 policies. Proved a blocked merge against a deliberately broken plan.  
-**Time:** 45 min  
 - `policies/` (AWS variants added)
 - `scripts/policy-gate.sh`
 - `evidence/lab-3-4/`
