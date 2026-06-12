@@ -1,14 +1,12 @@
 # CGE-P Capstone Repository — GRC Engineering Portfolio
 
 ## About
-
 This repository documents my hands-on GRC Engineering practice (Governance, Risk & Compliance) 
 through the CGE-P course. It demonstrates a modern approach to compliance: security controls 
 expressed as code, verified automatically, and evidence stored as machine-readable JSON — 
 auditable without human interpretation.
 
 ## What I practice
-
 - Expressing security controls as code (NIST 800-53)
 - Building compliant cloud infrastructure on AWS and GCP with Terraform
 - Producing machine-readable compliance evidence (no screenshots)
@@ -18,33 +16,53 @@ auditable without human interpretation.
 ## Labs completed
 
 ### Lab 2.3 — Compliant S3 Bucket (AWS)
-
-**Controls enforced:** SC-28, AU-3, AU-6, CM-6, AC-3
-
+**Controls enforced:** SC-28, AU-3, AU-6, CM-6, AC-3  
 **What I built:** A Terraform primitive that deploys an AWS S3 bucket with AES-256 encryption, 
-versioning, access logging, and public access blocked. Evidence captured as machine-readable JSON.
-
+versioning, access logging, and public access blocked. Evidence captured as machine-readable JSON.  
+**Time:** 30–45 min  
 - `terraform/primitives/compliant-s3/`
 - `evidence/lab-2-3/`
 
-### Lab 2.4 — Compliant GCS Bucket Module (GCP)
-
-**Controls enforced:** SC-12, SC-13, SC-28, AU-11, CM-6
-
+### Lab 2.4 — Terraform Modules for Compliance (GCP)
+**Controls enforced:** SC-12, SC-13, SC-28, AU-11, CM-6  
 **What I built:** A reusable Terraform module on GCP that enforces CMEK encryption with 90-day 
 key rotation, versioning, retention policies, and required compliance labels. Consumers cannot 
-disable the security floor.
-
+disable the security floor.  
+**Time:** 45–60 min  
 - `terraform/modules/compliant-gcs-bucket/`
 - `terraform/consumers/dev/`
 - `evidence/lab-2-4/`
 
-## Transferability to Microsoft 365 Governance
+### Lab 2.5 — IaC as Compliance Evidence (AWS)
+**Controls enforced:** SC-28, AU-9  
+**What I built:** An S3 Object Lock vault that refuses deletion by design. Evidence bundles from 
+Lab 2.3 are hashed, bundled, and uploaded with a recorded VersionId — immutable by design.  
+**Time:** 45 min  
+- `terraform/primitives/evidence-vault/`
+- `scripts/capture-evidence.sh`
+- `evidence/lab-2-5/`
 
+### Lab 3.3 — Writing Compliance Policies in Rego (GCP)
+**Controls enforced:** SC-28, AC-3, CM-6  
+**What I built:** Three Rego policies against GCP fixtures, each mapped to a NIST 800-53 control, 
+with `_test.rego` fixtures and a real `terraform plan -json` run. 8/8 unit tests passing.  
+**Time:** 60–75 min  
+- `policies/`
+- `evidence/lab-3-3/`
+
+### Lab 3.4 — Integrating PaC with Terraform via Conftest (AWS)
+**Controls enforced:** SC-28, AC-3, CM-6  
+**What I built:** Conftest wired into the Terraform plan workflow as a fail-closed gate. Added 
+AWS variants of SC-28 and AC-3 policies. Proved a blocked merge against a deliberately broken plan.  
+**Time:** 45 min  
+- `policies/` (AWS variants added)
+- `scripts/policy-gate.sh`
+- `evidence/lab-3-4/`
+
+## Transferability to Microsoft 365 Governance
 The compliance-as-code methodology demonstrated here — NIST control mapping, machine-readable 
 attestations, policy enforcement through infrastructure code — applies directly to Microsoft 365 
 governance:
-
 - **Entra ID:** Conditional Access Policies as code (Terraform `azuread` provider)
 - **Purview:** DLP policy logic and compliance label frameworks
 - **M365 Feature Governance:** Evaluation workflows for new features (Copilot, Clipchamp) against 
@@ -53,30 +71,27 @@ governance:
 *Actively expanding this portfolio to include Microsoft 365 / Azure governance examples.*
 
 ## Regulatory Scope
-
 While current labs map to NIST 800-53, the underlying methodology — risk-based control selection, 
 evidence-based accountability, and shift-left validation — is directly applicable to Swiss 
 regulatory frameworks (DSG, KDSG, ICT Minimum Standard). Control mapping to DSG/KDSG requirements 
 is in development.
 
 ## Tech stack
-
-- Terraform &gt;= 1.6
-- AWS (S3, IAM)
+- Terraform >= 1.6
+- AWS (S3, IAM, Object Lock)
 - GCP (Cloud Storage, Cloud KMS, IAM)
+- OPA / Rego
+- Conftest
 - Git / GitHub
 
 ## Why this matters for GRC
-
 Traditional GRC relies on spreadsheets and screenshots. This portfolio demonstrates a modern 
 approach: compliance controls expressed as code, verified automatically, and evidence stored as 
 JSON — auditable without human interpretation.
 
 ## Status
-
-✅ Core labs completed (2.3, 2.4,2.5,3.3, 3.4). Expanding to Microsoft 365 governance and DSG/KDSG control 
-mapping.
+✅ Labs 2.3, 2.4, 2.5, 3.3, 3.4 completed. Expanding to Microsoft 365 governance and DSG/KDSG 
+control mapping.
 
 ---
-
-_Built as part of the CGE-P (GRC Engineering Professional) course._
+*Built as part of the CGE-P (GRC Engineering Professional) course.*
