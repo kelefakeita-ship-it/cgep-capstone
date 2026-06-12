@@ -74,7 +74,7 @@ JSON — auditable without human interpretation.
 
 ## Status
 
-✅ Core labs completed (2.3, 2.4, 3.4). Expanding to Microsoft 365 governance and DSG/KDSG control 
+✅ Core labs completed (2.3, 2.4,2.5,3.3, 3.4). Expanding to Microsoft 365 governance and DSG/KDSG control 
 mapping.
 
 ---
