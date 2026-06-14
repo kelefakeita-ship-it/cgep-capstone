@@ -13,7 +13,7 @@ permissions:
 
 env:
   AWS_REGION: us-east-1
-  TF_WORKING_DIR: terraform
+  TF_WORKING_DIR: primitives/compliant-s3
 
 jobs:
   grc-gate:
