@@ -13,6 +13,29 @@ auditable without human interpretation.
 - Automating compliance checks in CI/CD pipelines
 - Writing OSCAL Component Definitions
 
+## Compliance Framework Mapping
+
+The controls implemented across these labs map to multiple frameworks simultaneously:
+
+| Lab | NIST 800-53 | ISO/IEC 27001:2022 | ISO/IEC 27017 | ISO/IEC 27018 | Swiss DSG |
+|-----|-------------|---------------------|----------------|----------------|-----------|
+| 2.3 | SC-28, AC-3, AU-3, AU-6, CM-6 | A.8.24, A.8.3, A.8.15, A.8.9 | CLD.9.5.1, CLD.8.1.4 | A.11, A.12 | Art. 8 |
+| 2.4 | SC-12, SC-13, SC-28, AU-11, CM-6 | A.8.24, A.8.15, A.8.9 | CLD.9.5.1 | A.11 | Art. 8 |
+| 2.5 | SC-28, AU-9 | A.8.15, A.5.33 | CLD.8.1.4 | A.12, A.20 | Art. 8 |
+| 3.3 | SC-28, AC-3, CM-6 | A.8.9, A.8.3 | — | — | Art. 8 |
+| 3.4 | SC-28, AC-3, CM-6 | A.8.9, A.8.8 | — | — | Art. 8 |
+| 4.3 | CM-3, CM-6, CA-2, CA-7, RA-5, AU-9 | A.8.8, A.8.9, A.8.15 | CLD.6.3.1 | A.12 | Art. 8 |
+
+**ISO/IEC 27017 cloud-specific controls covered:**
+- CLD.6.3.1 — Shared roles and responsibilities (OIDC, IAM)
+- CLD.8.1.4 — Removal of cloud assets (Object Lock, immutable evidence)
+- CLD.9.5.1 — Segregation in virtual environments (public access blocking)
+
+**ISO/IEC 27018 PII protection controls covered:**
+- A.11 — Encryption of PII at rest (AES-256, CMEK)
+- A.12 — Audit logging of access to PII (AU-3, AU-6)
+- A.20 — Retention and deletion policies (Object Lock, retention_days)
+
 ## Labs completed
 
 ### Lab 2.3 — Compliant S3 Bucket (AWS)
@@ -55,7 +78,7 @@ AWS variants of SC-28 and AC-3 policies. Proved a blocked merge against a delibe
 - `evidence/lab-3-4/`
 
 ### Lab 4.3 — GRC Evidence Pipeline (AWS + GitHub Actions)
-**Controls enforced:** CM-3, CM-6, CA-2, RA-5, AU-9
+**Controls enforced:** CM-3, CM-6, CA-2, CA-7, RA-5, AU-9
 **What I built:** A GitHub Actions workflow that runs on every PR: AWS OIDC authentication,
 Terraform plan, Conftest policy gate, tfsec scan, and evidence artifact upload. Red PR and
 green PR both in repo history.
@@ -64,9 +87,7 @@ green PR both in repo history.
 - `evidence/lab-4-3/`
 
 ## Transferability to Microsoft 365 Governance
-The compliance-as-code methodology demonstrated here — NIST control mapping, machine-readable
-attestations, policy enforcement through infrastructure code — applies directly to Microsoft 365
-governance:
+The compliance-as-code methodology demonstrated here applies directly to Microsoft 365 governance:
 - **Entra ID:** Conditional Access Policies as code (Terraform `azuread` provider)
 - **Purview:** DLP policy logic and compliance label frameworks
 - **M365 Feature Governance:** Evaluation workflows for new features against regulatory requirements
@@ -74,9 +95,9 @@ governance:
 *Actively expanding this portfolio to include Microsoft 365 / Azure governance examples.*
 
 ## Regulatory Scope
-While current labs map to NIST 800-53, the underlying methodology — risk-based control selection,
-evidence-based accountability, and shift-left validation — is directly applicable to Swiss
-regulatory frameworks (DSG, KDSG, ICT Minimum Standard).
+While current labs map to NIST 800-53, the methodology is directly applicable to Swiss regulatory
+frameworks (DSG, KDSG, ICT Minimum Standard). Control mapping to DSG/KDSG requirements is in
+development.
 
 ## Tech stack
 - Terraform >= 1.6
