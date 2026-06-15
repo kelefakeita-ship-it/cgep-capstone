@@ -23,7 +23,7 @@ BUNDLE=$(ls evidence-*.tar.gz | head -1)
 
 # 1. Integrity
 EXPECTED=$(cat "${BUNDLE}.sha256")
-ACTUAL=$(shasum -a 256 "${BUNDLE}" | awk '{print $1}')
+ACTUAL=$(sha256sum "${BUNDLE}" | awk '{print $1}')
 [[ "$EXPECTED" == "$ACTUAL" ]] || { echo "FAIL: SHA mismatch"; exit 1; }
 
 # 2. Authenticity + timestamp
