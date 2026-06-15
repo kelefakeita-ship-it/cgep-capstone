@@ -1,8 +1,7 @@
 # CGE-P Capstone Repository — GRC Engineering Portfolio
 
 ## About
-This repository documents my hands-on GRC Engineering practice (Governance, Risk & Compliance) 
-through the CGE-P course. It demonstrates a modern approach to compliance: security controls 
+This repository documents my hands-on GRC Engineering practice (Governance, Risk & Compliance). It demonstrates a modern approach to compliance: security controls 
 expressed as code, verified automatically, and evidence stored as machine-readable JSON — 
 auditable without human interpretation.
 
