@@ -1,7 +1,8 @@
 # CGE-P Capstone Repository — GRC Engineering Portfolio
 
 ## About
-This repository documents my hands-on GRC Engineering practice (Governance, Risk & Compliance). It demonstrates a modern approach to compliance: security controls 
+This repository documents my hands-on GRC Engineering practice (Governance, Risk & Compliance) 
+through the CGE-P course. It demonstrates a modern approach to compliance: security controls 
 expressed as code, verified automatically, and evidence stored as machine-readable JSON — 
 auditable without human interpretation.
 
@@ -24,6 +25,7 @@ The controls implemented across these labs map to multiple frameworks simultaneo
 | 3.3 | SC-28, AC-3, CM-6 | A.8.9, A.8.3 | — | — | Art. 8 |
 | 3.4 | SC-28, AC-3, CM-6 | A.8.9, A.8.8 | — | — | Art. 8 |
 | 4.3 | CM-3, CM-6, CA-2, CA-7, RA-5, AU-9 | A.8.8, A.8.9, A.8.15 | CLD.6.3.1 | A.12 | Art. 8 |
+| 4.4 | AU-9, AU-10, SI-7 | A.5.33, A.8.15 | CLD.8.1.4 | A.12, A.20 | Art. 8 |
 
 **ISO/IEC 27017 cloud-specific controls covered:**
 - CLD.6.3.1 — Shared roles and responsibilities (OIDC, IAM)
@@ -38,14 +40,14 @@ The controls implemented across these labs map to multiple frameworks simultaneo
 ## Labs completed
 
 ### Lab 2.3 — Compliant S3 Bucket (AWS)
-**Controls enforced:** SC-28, AU-3, AU-6, CM-6, AC-3
+**Controls enforced:** SC-28, AU-3, AU-6, CM-6, AC-3  
 **What I built:** A Terraform primitive that deploys an AWS S3 bucket with AES-256 encryption,
 versioning, access logging, and public access blocked. Evidence captured as machine-readable JSON.
 - `primitives/compliant-s3/`
 - `evidence/lab-2-3/`
 
 ### Lab 2.4 — Terraform Modules for Compliance (GCP)
-**Controls enforced:** SC-12, SC-13, SC-28, AU-11, CM-6
+**Controls enforced:** SC-12, SC-13, SC-28, AU-11, CM-6  
 **What I built:** A reusable Terraform module on GCP that enforces CMEK encryption with 90-day
 key rotation, versioning, retention policies, and required compliance labels. Consumers cannot
 disable the security floor.
@@ -54,7 +56,7 @@ disable the security floor.
 - `evidence/lab-2-4/`
 
 ### Lab 2.5 — IaC as Compliance Evidence (AWS)
-**Controls enforced:** SC-28, AU-9
+**Controls enforced:** SC-28, AU-9  
 **What I built:** An S3 Object Lock vault that refuses deletion by design. Evidence bundles from
 Lab 2.3 are hashed, bundled, and uploaded with a recorded VersionId — immutable by design.
 - `primitives/evidence-vault/`
@@ -62,14 +64,14 @@ Lab 2.3 are hashed, bundled, and uploaded with a recorded VersionId — immutabl
 - `evidence/lab-2-5/`
 
 ### Lab 3.3 — Writing Compliance Policies in Rego (GCP)
-**Controls enforced:** SC-28, AC-3, CM-6
+**Controls enforced:** SC-28, AC-3, CM-6  
 **What I built:** Three Rego policies against GCP fixtures, each mapped to a NIST 800-53 control,
 with `_test.rego` fixtures and a real `terraform plan -json` run. 8/8 unit tests passing.
 - `policies/`
 - `evidence/lab-3-3/`
 
 ### Lab 3.4 — Integrating PaC with Terraform via Conftest (AWS)
-**Controls enforced:** SC-28, AC-3, CM-6
+**Controls enforced:** SC-28, AC-3, CM-6  
 **What I built:** Conftest wired into the Terraform plan workflow as a fail-closed gate. Added
 AWS variants of SC-28 and AC-3 policies. Proved a blocked merge against a deliberately broken plan.
 - `policies/` (AWS variants added)
@@ -77,13 +79,23 @@ AWS variants of SC-28 and AC-3 policies. Proved a blocked merge against a delibe
 - `evidence/lab-3-4/`
 
 ### Lab 4.3 — GRC Evidence Pipeline (AWS + GitHub Actions)
-**Controls enforced:** CM-3, CM-6, CA-2, CA-7, RA-5, AU-9
+**Controls enforced:** CM-3, CM-6, CA-2, CA-7, RA-5, AU-9  
 **What I built:** A GitHub Actions workflow that runs on every PR: AWS OIDC authentication,
 Terraform plan, Conftest policy gate, tfsec scan, and evidence artifact upload. Red PR and
 green PR both in repo history.
 - `.github/workflows/grc-gate.yml`
 - `oidc/`
 - `evidence/lab-4-3/`
+
+### Lab 4.4 — Evidence Management & Chain of Custody (AWS)
+**Controls enforced:** AU-9, AU-10, SI-7  
+**What I built:** Extended the Lab 4.3 pipeline with keyless Cosign signing via GitHub OIDC.
+Evidence bundles are signed, timestamped via Sigstore Rekor, and uploaded to the immutable
+Lab 2.5 vault. Chain of custody verified end-to-end with a single script. Tamper test
+proves integrity is mathematical, not aspirational.
+- `.github/workflows/grc-gate.yml` (Cosign steps added)
+- `scripts/verify-evidence.sh`
+- `evidence/lab-4-4/`
 
 ## Transferability to Microsoft 365 Governance
 The compliance-as-code methodology demonstrated here applies directly to Microsoft 365 governance:
@@ -105,6 +117,7 @@ development.
 - OPA / Rego
 - Conftest
 - tfsec
+- Cosign / Sigstore
 - GitHub Actions
 - Git / GitHub
 
@@ -114,7 +127,6 @@ approach: compliance controls expressed as code, verified automatically, and evi
 JSON — auditable without human interpretation.
 
 ## Status
-✅ Labs 2.3, 2.4, 2.5, 3.3, 3.4, 4.3 completed.
+✅ Labs 2.3, 2.4, 2.5, 3.3, 3.4, 4.3, 4.4 completed.
 
 ---
-*Built as part of the CGE-P (GRC Engineering Professional) course.*
