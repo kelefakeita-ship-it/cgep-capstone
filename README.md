@@ -25,6 +25,7 @@ The controls implemented across these labs map to multiple frameworks simultaneo
 | 3.4 | SC-28, AC-3, CM-6 | A.8.9, A.8.8 | — | — | Art. 8 |
 | 4.3 | CM-3, CM-6, CA-2, CA-7, RA-5, AU-9 | A.8.8, A.8.9, A.8.15 | CLD.6.3.1 | A.12 | Art. 8 |
 | 4.4 | AU-9, AU-10, SI-7 | A.5.33, A.8.15 | CLD.8.1.4 | A.12, A.20 | Art. 8 |
+| 5.2 | AU-2, AU-10, AU-12, RA-5, SI-4, CM-2, CM-6, CM-8 | A.8.15, A.8.16, A.5.36 | — | — | Art. 8 |
 
 **ISO/IEC 27017 cloud-specific controls covered:**
 - CLD.6.3.1 — Shared roles and responsibilities (OIDC, IAM)
@@ -95,6 +96,15 @@ proves integrity is mathematical, not aspirational.
 - `.github/workflows/grc-gate.yml` (Cosign steps added)
 - `scripts/verify-evidence.sh`
 - `evidence/lab-4-4/`
+
+### Lab 5.2 — AWS Security Services Baseline
+**Controls enforced:** AU-2, AU-12, AU-10, RA-5, SI-4, CM-2, CM-6, CM-8  
+**What I built:** Always-on AWS-native compliance backbone — multi-region CloudTrail with
+log-file validation, Security Hub subscribed to NIST 800-53 Rev 5 and AWS Foundational Security
+Best Practices, and AWS Config for resource configuration recording. Unlike the PR-triggered
+pipeline (Lab 4.3/4.4), this produces evidence continuously, independent of code changes.
+- `baselines/aws/`
+- `evidence/lab-5-2/`
 
 ## Transferability to Microsoft 365 Governance
 The compliance-as-code methodology demonstrated here applies directly to Microsoft 365 governance:
