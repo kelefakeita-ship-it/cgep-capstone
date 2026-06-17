@@ -135,7 +135,5 @@ Traditional GRC relies on spreadsheets and screenshots. This portfolio demonstra
 approach: compliance controls expressed as code, verified automatically, and evidence stored as
 JSON — auditable without human interpretation.
 
-## Status
-✅ Labs 2.3, 2.4, 2.5, 3.3, 3.4, 4.3, 4.4 completed.
 
 ---
