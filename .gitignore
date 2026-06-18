@@ -3,3 +3,6 @@
 *.tfstate.backup
 tfplan
 *.exe
+tfplan
+destroy-plan
+*.tfplan
