@@ -1,7 +1,8 @@
 # CGE-P Capstone Repository — GRC Engineering Portfolio
 
 ## About
-This repository documents my hands-on GRC Engineering practice (Governance, Risk & Compliance). It demonstrates a modern approach to compliance: security controls 
+This repository documents my hands-on GRC Engineering practice (Governance, Risk & Compliance) 
+through the CGE-P course. It demonstrates a modern approach to compliance: security controls 
 expressed as code, verified automatically, and evidence stored as machine-readable JSON — 
 auditable without human interpretation.
 
@@ -26,15 +27,16 @@ The controls implemented across these labs map to multiple frameworks simultaneo
 | 4.3 | CM-3, CM-6, CA-2, CA-7, RA-5, AU-9 | A.8.8, A.8.9, A.8.15 | CLD.6.3.1 | A.12 | Art. 8 |
 | 4.4 | AU-9, AU-10, SI-7 | A.5.33, A.8.15 | CLD.8.1.4 | A.12, A.20 | Art. 8 |
 | 5.2 | AU-2, AU-10, AU-12, RA-5, SI-4, CM-2, CM-6, CM-8 | A.8.15, A.8.16, A.5.36 | — | — | Art. 8 |
+| 5.4 | CM-6, AC-2, AC-3, AU-2, AU-12 | A.8.9, A.8.3, A.8.15 | CLD.6.3.1, CLD.9.5.1 | A.11 | Art. 8 |
 
 **ISO/IEC 27017 cloud-specific controls covered:**
-- CLD.6.3.1 — Shared roles and responsibilities (OIDC, IAM)
+- CLD.6.3.1 — Shared roles and responsibilities (AWS OIDC, GCP Workload Identity Federation)
 - CLD.8.1.4 — Removal of cloud assets (Object Lock, immutable evidence)
-- CLD.9.5.1 — Segregation in virtual environments (public access blocking)
+- CLD.9.5.1 — Segregation in virtual environments (public access blocking, Org Policy)
 
 **ISO/IEC 27018 PII protection controls covered:**
 - A.11 — Encryption of PII at rest (AES-256, CMEK)
-- A.12 — Audit logging of access to PII (AU-3, AU-6)
+- A.12 — Audit logging of access to PII (AU-3, AU-6, GCP Data Access logs)
 - A.20 — Retention and deletion policies (Object Lock, retention_days)
 
 ## Labs completed
@@ -106,6 +108,18 @@ pipeline (Lab 4.3/4.4), this produces evidence continuously, independent of code
 - `baselines/aws/`
 - `evidence/lab-5-2/`
 
+### Lab 5.4 — GCP Security Services Baseline
+**Controls enforced:** CM-6, AC-2, AC-3, AU-2, AU-12  
+**What I built:** GCP-native identity-first compliance baseline — Workload Identity Federation
+replacing long-lived service account JSON keys with short-lived OIDC tokens, and Data Access
+audit logs enabled across Storage, KMS, and IAM (off by default in GCP, the most-cited audit
+finding). Verified end-to-end: a live storage read produced an immediate audit log entry.
+Org Policy (preventive controls) fully coded but gated behind a feature flag, since this
+standalone project sits outside any GCP Organization — a documented environment constraint,
+not a skipped requirement.
+- `baselines/gcp/`
+- `evidence/lab-5-4/`
+
 ## Transferability to Microsoft 365 Governance
 The compliance-as-code methodology demonstrated here applies directly to Microsoft 365 governance:
 - **Entra ID:** Conditional Access Policies as code (Terraform `azuread` provider)
@@ -121,8 +135,8 @@ development.
 
 ## Tech stack
 - Terraform >= 1.6
-- AWS (S3, IAM, Object Lock)
-- GCP (Cloud Storage, Cloud KMS, IAM)
+- AWS (S3, IAM, Object Lock, CloudTrail, Security Hub, Config)
+- GCP (Cloud Storage, Cloud KMS, IAM, Workload Identity Federation, Org Policy, Audit Logs)
 - OPA / Rego
 - Conftest
 - tfsec
@@ -135,5 +149,8 @@ Traditional GRC relies on spreadsheets and screenshots. This portfolio demonstra
 approach: compliance controls expressed as code, verified automatically, and evidence stored as
 JSON — auditable without human interpretation.
 
+## Status
+✅ Labs 2.3, 2.4, 2.5, 3.3, 3.4, 4.3, 4.4, 5.2, 5.4 completed.
 
 ---
+*Built as part of the CGE-P (GRC Engineering Professional) course.*
