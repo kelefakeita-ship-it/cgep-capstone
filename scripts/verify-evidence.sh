@@ -9,12 +9,13 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --vault)   VAULT="$2"; shift 2 ;;
     --profile) PROFILE_ARG="--profile $2"; shift 2 ;;
+     --prefix)  PREFIX_BASE="$2"; shift 2 ;;
   esac
 done
 [[ -z "$VAULT" ]] && { echo "Set --vault or EVIDENCE_VAULT"; exit 2; }
 
 WORK=$(mktemp -d); trap 'rm -rf "$WORK"' EXIT; cd "$WORK"
-PREFIX="runs/${RUN_ID}"
+PREFIX="${PREFIX_BASE:-runs}/${RUN_ID}"
 
 aws $PROFILE_ARG s3 cp "s3://${VAULT}/${PREFIX}/" . --recursive \
   --exclude "*" --include "evidence-*.tar.gz*" --include "receipt.json"
