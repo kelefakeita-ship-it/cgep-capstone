@@ -1,0 +1,135 @@
+# .github/workflows/capstone-gate.yml
+# CGE-P Capstone — end-to-end GRC pipeline for the Acme Health intake API.
+# Five named steps: Plan -> Policy check -> Apply (on merge) -> Sign -> Upload.
+name: capstone-gate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'capstone-app/**'
+      - 'policies/capstone/**'
+      - '.github/workflows/capstone-gate.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'capstone-app/**'
+      - 'policies/capstone/**'
+      - '.github/workflows/capstone-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+env:
+  AWS_REGION: us-east-1
+  TF_WORKING_DIR: capstone-app/terraform
+
+jobs:
+  capstone-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
+          terraform_wrapper: false
+
+      - name: Install Conftest
+        run: |
+          curl -fsSL https://github.com/open-policy-agent/conftest/releases/download/v0.50.0/conftest_0.50.0_Linux_x86_64.tar.gz \
+            | tar -xz -C /usr/local/bin conftest
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+        with:
+          cosign-release: 'v2.2.4'
+
+      # ---- STEP 1: PLAN ----
+      - name: Terraform plan
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          terraform init -input=false
+          terraform validate
+          terraform plan -out=tfplan -no-color | tee plan.txt
+          terraform show -json tfplan > plan.json
+
+      # ---- STEP 2: POLICY CHECK (fail closed) ----
+      - name: Conftest policy gate
+        id: conftest
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          mkdir -p ../../evidence-capstone
+          conftest test --policy ../../policies/capstone --all-namespaces --output=json plan.json \
+            > ../../evidence-capstone/conftest-results.json || true
+          python3 -c '
+          import json, sys
+          d = json.load(open("../../evidence-capstone/conftest-results.json"))
+          results = d if isinstance(d, list) else [d]
+          fails = sum(len(r.get("failures") or []) for r in results)
+          print(f"conftest failures: {fails}")
+          sys.exit(0 if fails == 0 else 1)
+          '
+
+      # ---- STEP 3: APPLY (only on push to main, i.e. after merge) ----
+      - name: Terraform apply
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          terraform apply -auto-approve tfplan
+
+      - name: Copy plan into evidence
+        if: always()
+        run: |
+          mkdir -p evidence-capstone
+          cp ${{ env.TF_WORKING_DIR }}/plan.json evidence-capstone/plan.json || true
+          cp ${{ env.TF_WORKING_DIR }}/plan.txt evidence-capstone/plan.txt || true
+
+      # ---- STEP 4 + 5: SIGN + UPLOAD (only on push to main) ----
+      - name: Bundle + sign + upload to vault
+        id: sign
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          VAULT: ${{ vars.EVIDENCE_VAULT }}
+          RUN_ID: ${{ github.run_id }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          BUNDLE="evidence-${RUN_ID}-${SHA}.tar.gz"
+          ( cd evidence-capstone && tar czf "../${BUNDLE}" . )
+          sha256sum "${BUNDLE}" | awk '{print $1}' > "${BUNDLE}.sha256"
+          cosign sign-blob --yes --bundle "${BUNDLE}.sig.bundle" "${BUNDLE}"
+          KEY_PREFIX="capstone/runs/${RUN_ID}"
+          aws s3 cp "${BUNDLE}"            "s3://${VAULT}/${KEY_PREFIX}/${BUNDLE}"
+          aws s3 cp "${BUNDLE}.sha256"     "s3://${VAULT}/${KEY_PREFIX}/${BUNDLE}.sha256"
+          aws s3 cp "${BUNDLE}.sig.bundle" "s3://${VAULT}/${KEY_PREFIX}/${BUNDLE}.sig.bundle"
+          VERSION_ID=$(aws s3api head-object --bucket "${VAULT}" --key "${KEY_PREFIX}/${BUNDLE}" --query VersionId --output text)
+          cat > receipt.json <<EOF
+          {
+            "run_id":"${RUN_ID}",
+            "vault":"${VAULT}",
+            "bundle_key":"${KEY_PREFIX}/${BUNDLE}",
+            "version_id":"${VERSION_ID}",
+            "sha256":"$(cat ${BUNDLE}.sha256)",
+            "commit":"${SHA}"
+          }
+          EOF
+          aws s3 cp receipt.json "s3://${VAULT}/${KEY_PREFIX}/receipt.json"
+
+      - name: Upload evidence artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: capstone-evidence-${{ github.run_id }}
+          path: evidence-capstone/
+          retention-days: 90
