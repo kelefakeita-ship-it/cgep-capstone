@@ -47,7 +47,7 @@ jobs:
 
       - name: Install Conftest
         run: |
-          curl -fsSL https://github.com/open-policy-agent/conftest/releases/download/v0.50.0/conftest_0.50.0_Linux_x86_64.tar.gz \
+          curl -fsSL https://github.com/open-policy-agent/conftest/releases/download/v0.68.2/conftest_0.68.2_Linux_x86_64.tar.gz \
             | tar -xz -C /usr/local/bin conftest
 
       - name: Install Cosign
@@ -70,7 +70,7 @@ jobs:
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: |
           mkdir -p ../../evidence-capstone
-          conftest test --policy ../../policies/capstone --all-namespaces --output=json plan.json \
+          conftest test --policy ../../policies/capstone --all-namespaces --ignore=".*tests.*" --output=json plan.json \
             > ../../evidence-capstone/conftest-results.json || true
           python3 -c '
           import json, sys
