@@ -120,6 +120,18 @@ not a skipped requirement.
 - `baselines/gcp/`
 - `evidence/lab-5-4/`
 
+### Lab 6.1 — OSCAL Component Definition
+**Controls enforced:** SC-28, AC-3, AU-3, CM-6 (documentation layer)  
+**What I built:** A machine-readable OSCAL Component Definition describing the Lab 2.3 S3 module,
+mapping each NIST 800-53 control to its exact Terraform resource and linking to a real, verified
+evidence bundle in the Lab 2.5 vault. A minimal Profile selects the four controls from the NIST
+catalog and resolves to a full control catalog via `trestle author profile-resolve`. The full
+traversal — catalog → profile → component → evidence URI → signed bundle — verified end to end
+with `verify-evidence.sh`, producing `CHAIN INTACT`. An assessor can now verify a control without
+ever talking to me.
+- `oscal/`
+- `evidence/lab-6-1/`
+
 ## Transferability to Microsoft 365 Governance
 The compliance-as-code methodology demonstrated here applies directly to Microsoft 365 governance:
 - **Entra ID:** Conditional Access Policies as code (Terraform `azuread` provider)
@@ -150,7 +162,7 @@ approach: compliance controls expressed as code, verified automatically, and evi
 JSON — auditable without human interpretation.
 
 ## Status
-✅ Labs 2.3, 2.4, 2.5, 3.3, 3.4, 4.3, 4.4, 5.2, 5.4 completed.
+✅ Labs 2.3, 2.4, 2.5, 3.3, 3.4, 4.3, 4.4, 5.2, 5.4, 6.1 completed.
 
 ---
 *Built as part of the CGE-P (GRC Engineering Professional) course.*
