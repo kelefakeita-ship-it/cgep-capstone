@@ -2,8 +2,11 @@
 # Acme Health — Patient Intake API (CGE-P Capstone Starter)
 #
 # This is the workload your capstone repo wraps with GRC controls.
-# It is INTENTIONALLY non-compliant. See GAPS.md for the named flaws
-# your Rego policies + Terraform overrides are expected to remediate.
+# GRC baseline overrides applied directly here are marked "GAP-XX closed"
+# where the gap is an inline resource attribute that cannot be
+# expressed as a separate override resource (DynamoDB encryption,
+# Lambda vpc_config, IAM policy). All other gaps are closed in
+# separate files: kms.tf, s3_hardening.tf, vpc_endpoints.tf.
 ######################################################################
 
 terraform {
@@ -98,7 +101,6 @@ resource "aws_route_table_association" "public" {
 
 ######################################################################
 # DynamoDB — submissions table.
-# GAP-02: encryption uses AWS-owned default, not a CMK you control.
 ######################################################################
 
 resource "aws_dynamodb_table" "intake" {
@@ -111,36 +113,27 @@ resource "aws_dynamodb_table" "intake" {
     type = "S"
   }
 
-  # No server_side_encryption block. Defaults to AWS-owned key.
-  # GAP-02: capstone learner expected to add this with a customer-owned key.
+  # GAP-02 closed: customer-managed KMS key instead of AWS-owned default.
+  # SOC 2 CC6.1 — logical access security measures protect data at rest.
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = aws_kms_key.phi.arn
+  }
 }
 
 ######################################################################
 # S3 — uploads bucket.
-# GAP-01: relies on AWS-managed SSE-S3 (default since 2023) instead of
-#         SSE-KMS with a customer CMK. PHI keys are not under customer
-#         custody.
-# GAP-03: no bucket policy denying non-TLS requests
-#         (aws:SecureTransport).
-# GAP-04: no versioning. PHI overwrites are unrecoverable.
-#
-# Note: AWS now defaults new buckets to SSE-S3 + full public access block.
-# The "gaps" here are real residual gaps once those defaults are in place.
+# GAP-01, GAP-03, GAP-04 closed in s3_hardening.tf.
 ######################################################################
 
 resource "aws_s3_bucket" "uploads" {
   bucket = "${local.name_prefix}-uploads-${local.suffix}"
 }
 
-# (Intentionally omitted: SSE-KMS encryption with a customer CMK,
-#  bucket policy enforcing aws:SecureTransport, versioning, lifecycle.
-#  These are the gaps the learner closes.)
-
 ######################################################################
 # Lambda — the intake handler.
-# GAP-05: not deployed inside the VPC.
-# GAP-06: no reserved concurrency, no DLQ, no X-Ray.
-# GAP-07: IAM role has dynamodb:* and s3:* on the resources (over-broad).
+# GAP-06 (no reserved concurrency/DLQ/X-Ray) intentionally left open;
+# documented in OSCAL as a known gap, not technically remediated.
 ######################################################################
 
 data "archive_file" "handler" {
@@ -167,23 +160,33 @@ resource "aws_iam_role_policy_attachment" "lambda_basic" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-# GAP-07: deliberately broad permissions on the workload data stores.
 resource "aws_iam_role_policy" "lambda_inline" {
   name = "intake-data-access"
   role = aws_iam_role.lambda.id
 
+  # GAP-07 closed: scoped to exactly the actions handler.py performs
+  # (DynamoDB PutItem, S3 PutObject) instead of dynamodb:* and s3:*.
+  # Also grants KMS permissions required to write through the CMK
+  # added for GAP-01/GAP-02 — without this the handler would get
+  # Access Denied writing to either now-encrypted resource.
+  # SOC 2 CC6.3 — access is restricted to least privilege.
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
         Effect   = "Allow"
-        Action   = "dynamodb:*"
+        Action   = ["dynamodb:PutItem"]
         Resource = aws_dynamodb_table.intake.arn
       },
       {
         Effect   = "Allow"
-        Action   = "s3:*"
-        Resource = ["${aws_s3_bucket.uploads.arn}", "${aws_s3_bucket.uploads.arn}/*"]
+        Action   = ["s3:PutObject"]
+        Resource = "${aws_s3_bucket.uploads.arn}/*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["kms:GenerateDataKey", "kms:Decrypt"]
+        Resource = aws_kms_key.phi.arn
       }
     ]
   })
@@ -205,13 +208,19 @@ resource "aws_lambda_function" "intake" {
     }
   }
 
-  # GAP-05: no vpc_config block. Learner expected to add one referencing
-  # aws_subnet.private[*] and a hardened security group.
+  # GAP-05 closed: deployed inside the private subnets behind a
+  # dedicated security group instead of the default Lambda environment.
+  # SOC 2 CC6.6 — logical access restricted via network segmentation.
+  vpc_config {
+    subnet_ids         = aws_subnet.private[*].id
+    security_group_ids = [aws_security_group.lambda.id]
+  }
 }
 
 ######################################################################
 # API Gateway — HTTP API in front of the Lambda.
-# GAP-08: no access logging, no throttling, no WAF.
+# GAP-08 (no access logging/throttling/WAF) intentionally left open;
+# documented in OSCAL as a known gap, not technically remediated.
 ######################################################################
 
 resource "aws_apigatewayv2_api" "intake" {
@@ -237,7 +246,6 @@ resource "aws_apigatewayv2_stage" "default" {
   api_id      = aws_apigatewayv2_api.intake.id
   name        = "$default"
   auto_deploy = true
-  # GAP-08: no access_log_settings. Learner expected to wire CloudWatch logs.
 }
 
 resource "aws_lambda_permission" "apigw" {
