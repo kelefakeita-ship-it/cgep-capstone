@@ -1,80 +1,57 @@
-# cgep-app-starter
 
-> Patient Intake API for "Acme Health". The deliberately-flawed workload your **CGE-P capstone** wraps with GRC controls.
+# Acme Health Patient Intake — CGE-P Capstone
 
-## What this is
+A derivative of [`GRCEngClub/cgep-app-starter`](https://github.com/GRCEngClub/cgep-app-starter).
+The starter's Patient Intake API (VPC + API Gateway + Lambda + DynamoDB + S3) is
+present and runnable; this repo wraps it with a SOC 2 GRC control system.
 
-A minimal AWS workload: VPC, Lambda, API Gateway, DynamoDB, S3. It ingests patient intake submissions over HTTPS. Think of it as a system you have just inherited from an engineering team and been asked to make audit-defensible.
+**Primary framework: SOC 2 Trust Services Criteria.** Full reasoning in [`WRITEUP.md`](./WRITEUP.md).
 
-This repository ships **non-compliant on purpose**. Your job in the capstone is not to rewrite this app. Your job is to wrap it with the four CGE-P layers (Terraform GRC baseline, Rego policies, GitHub Actions evidence pipeline, OSCAL component) so the same workload becomes audit-defensible against HIPAA, SOC 2, and CMMC L2.
+## The four layers
 
-## The deploy gate
+| Layer | Location | What it does |
+|-------|----------|--------------|
+| 1 — Terraform GRC baseline | `terraform/` | Closes 6 of 8 gaps: CMK encryption, TLS enforcement, versioning, VPC isolation, least-privilege IAM |
+| 2 — OPA policy suite | `../policies/capstone/` | 6 SOC 2 Rego policies, 18 unit tests, re-detect any reintroduced gap |
+| 3 — GitHub Actions pipeline | `../.github/workflows/capstone-gate.yml` | Plan → Policy → Apply → Sign → Upload on every change |
+| 4 — OSCAL | `../oscal/` | Self-authored SOC 2 catalog + component definition + profile, validated by trestle |
 
-If you cannot deploy this starter, you cannot pass the capstone. Real GRC engineers inherit working systems. Step zero is making the system run.
+## Gap coverage
 
-```bash
-git clone https://github.com/GRCEngClub/cgep-app-starter
-cd cgep-app-starter
+Closed in Terraform and enforced in policy: GAP-01 (CC6.1), GAP-02 (CC6.1),
+GAP-03 (CC6.7), GAP-04 (A1.2), GAP-05 (CC6.6), GAP-07 (CC6.3).
+Documented open: GAP-06, GAP-08 (both CC7.2) — see `WRITEUP.md`.
 
-# Confirm you're authenticated to the right account:
-make creds AWS_PROFILE=<your-sandbox-profile>
+## Grader verification
 
-make deploy AWS_PROFILE=<your-sandbox-profile>
-make test    AWS_PROFILE=<your-sandbox-profile>
-```
+**1. Confirm the starter still runs.** From `terraform/`:
+terraform init
 
-> **AWS SSO note:** if your profile is SSO-based, Terraform's AWS provider can fail to read it directly with `failed to find SSO session section`. The Makefile's `eval $(aws configure export-credentials)` pattern handles this. If you're running `terraform` commands by hand, do the same export first.
+terraform apply -auto-approve
 
-Expected output of `make test`:
+curl -sS -X POST "$(terraform output -raw api_url)" -H "content-type: application/json" -d '{"patient_id":"P-0001","fields":{"reason":"test"}}'
+Expect: `{"submission_id": "...", "status": "received"}`
 
-```json
-{
-    "submission_id": "f1e3...",
-    "status": "received"
-}
-```
+**2. Confirm the policy suite passes.** From repo root:
+opa test policies/capstone/ -v
+Expect: `PASS: 18/18`
 
-When you're done exploring: `make destroy`.
+**3. Confirm the pipeline gate works.** In PR history:
+- Green PR #6 — compliant change, gate passed, merged.
+- Red PR #7 — reintroduced GAP-04, gate blocked, closed unmerged.
 
-## What you build on top
+**4. Verify a signed evidence bundle.** From repo root (requires AWS creds + cosign):
+EVIDENCE_VAULT=cgep-lab-grc-evidence-vault-d267bb51 bash scripts/verify-evidence.sh 27848293937 --prefix capstone/runs
+Expect: `CHAIN INTACT for run 27848293937`
 
-Fork the repo into your own `cgep-capstone` and add:
+**5. Validate the OSCAL.** From `oscal/`:
+trestle validate -f component-definitions/capstone-system/component-definition.json
+Expect: `VALID`
 
-1. **Layer 1 — GRC baseline (Terraform).** KMS keys, an S3 evidence vault with Object Lock, a CloudTrail trail. Bring this starter's data stores under your CMK.
-2. **Layer 2 — OPA policy suite (Rego).** Five or more policies that catch the named gaps in [GAPS.md](GAPS.md). Each policy maps to at least one control from the framework you choose.
-3. **Layer 3 — GitHub Actions pipeline.** Plan → Conftest gate → apply → Cosign sign → upload to vault.
-4. **Layer 4 — OSCAL component.** A `component-definition.json` describing how your governed system implements its controls.
+## OSCAL traversal (the audit-without-a-meeting demonstration)
 
-Full brief: `docs/labs/07_01_capstone_brief.md` in the course content repo.
-
-## Framework mapping is required
-
-Your capstone must declare a primary framework: **HIPAA Security Rule**, **SOC 2 Trust Services Criteria**, or **CMMC Level 2**. Every policy carries at least one control ID from your chosen framework. Your OSCAL component's `control-implementations` reference your framework's catalog.
-
-A starter mapping is in [FRAMEWORKS.md](FRAMEWORKS.md). It is not the only valid mapping. You're expected to defend yours.
-
-## Cost
-
-Roughly $0 if destroyed within an hour. Lambda + API Gateway + DynamoDB + S3 are all pay-per-use, and an empty deployment generates no traffic. CloudTrail (which you add) costs cents.
-
-## Layout
-
-```
-cgep-app-starter/
-├── README.md            # this file
-├── WORKLOAD.md          # what the API does
-├── GAPS.md              # the named flaws your policies must catch
-├── FRAMEWORKS.md        # HIPAA / SOC 2 / CMMC mapping primer
-├── Makefile             # make deploy | test | destroy
-├── terraform/
-│   ├── main.tf
-│   ├── variables.tf
-│   ├── outputs.tf
-│   └── lambda/handler.py
-└── test/
-    └── intake.sh
-```
-
-## License
-
-MIT. Fork freely. Submissions remain learners' own work.
+Start at `oscal/component-definitions/capstone-system/component-definition.json`.
+Each of the 5 implemented requirements maps a SOC 2 criterion to real Terraform
+resources (`props`) and a signed evidence bundle (`links[rel=evidence]`).
+The `source` points at the self-authored SOC 2 catalog in `oscal/catalogs/soc2-tsc/`.
+Follow an evidence href into the vault, run the verify script (step 4), see `CHAIN INTACT`.
