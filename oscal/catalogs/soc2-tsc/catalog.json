@@ -1,0 +1,81 @@
+{
+  "catalog": {
+    "uuid": "807efadc-71ba-4c87-b028-e544d3667566",
+    "metadata": {
+      "title": "SOC 2 Trust Services Criteria (minimal subset)",
+      "last-modified": "2026-06-19T21:00:00.000000+00:00",
+      "version": "2017-rev-2022",
+      "oscal-version": "1.2.1",
+      "remarks": "Minimal OSCAL catalog of the SOC 2 Trust Services Criteria implemented by the Acme Health Patient Intake capstone. Authored from the AICPA 2017 TSC (2022 revision points of focus). Not an official AICPA OSCAL publication; scoped to the criteria this system enforces."
+    },
+    "groups": [
+      {
+        "id": "cc6",
+        "title": "CC6 - Logical and Physical Access Controls",
+        "controls": [
+          {
+            "id": "cc6.1",
+            "title": "Logical access security - data at rest protection",
+            "parts": [
+              {
+                "id": "cc6.1_stmt",
+                "name": "statement",
+                "prose": "The entity implements logical access security measures to protect information assets, including encryption of data at rest under keys the entity controls."
+              }
+            ]
+          },
+          {
+            "id": "cc6.3",
+            "title": "Least-privilege access authorization",
+            "parts": [
+              {
+                "id": "cc6.3_stmt",
+                "name": "statement",
+                "prose": "The entity authorizes, modifies, or removes access to data and resources based on roles and least privilege, restricting access to only what each principal requires."
+              }
+            ]
+          },
+          {
+            "id": "cc6.6",
+            "title": "Network segmentation and boundary protection",
+            "parts": [
+              {
+                "id": "cc6.6_stmt",
+                "name": "statement",
+                "prose": "The entity implements logical access security measures to protect against threats from sources outside its system boundaries, including network segmentation isolating workloads from public networks."
+              }
+            ]
+          },
+          {
+            "id": "cc6.7",
+            "title": "Transmission protection",
+            "parts": [
+              {
+                "id": "cc6.7_stmt",
+                "name": "statement",
+                "prose": "The entity restricts the transmission, movement, and removal of information to authorized channels and protects it during transmission, including enforcing encryption in transit (TLS)."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "a1",
+        "title": "A1 - Availability",
+        "controls": [
+          {
+            "id": "a1.2",
+            "title": "Recovery and environmental protections",
+            "parts": [
+              {
+                "id": "a1.2_stmt",
+                "name": "statement",
+                "prose": "The entity authorizes, designs, develops, implements, operates, and maintains environmental protections and data recovery mechanisms, including versioning to recover from unintended overwrites or deletions."
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

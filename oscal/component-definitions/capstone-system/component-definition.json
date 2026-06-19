@@ -1,0 +1,125 @@
+{
+  "component-definition": {
+    "uuid": "d356c765-f471-40dc-b3be-0a9b862e1143",
+    "metadata": {
+      "title": "Acme Health Patient Intake - SOC 2 control implementation",
+      "last-modified": "2026-06-19T21:00:00.000000+00:00",
+      "version": "1.0.0",
+      "oscal-version": "1.2.1",
+      "parties": [
+        {
+          "uuid": "e5d52232-8ea4-4616-b1f1-d8fca908eb70",
+          "type": "person",
+          "name": "Kelefa Keita"
+        }
+      ]
+    },
+    "components": [
+      {
+        "uuid": "c4e198a0-e564-4148-ab42-0437714fb749",
+        "type": "service",
+        "title": "Acme Health Patient Intake API (GRC-wrapped)",
+        "description": "The cgep-app-starter Patient Intake API (VPC + API Gateway + Lambda + DynamoDB + S3) wrapped with a Terraform GRC baseline that closes six named gaps from GAPS.md and enforces them continuously via an OPA policy suite and a signing pipeline.",
+        "purpose": "Accept patient intake submissions (PHI) and persist them to DynamoDB and S3 under customer-controlled encryption, network isolation, and least-privilege access.",
+        "responsible-roles": [
+          { "role-id": "provider", "party-uuids": ["e5d52232-8ea4-4616-b1f1-d8fca908eb70"] }
+        ],
+        "control-implementations": [
+          {
+            "uuid": "c56e646c-6bf7-403c-83c1-67fd297d08b5",
+            "source": "trestle://catalogs/soc2-tsc/catalog.json",
+            "description": "SOC 2 Trust Services Criteria implemented by the GRC baseline wrapped around the Acme Health intake workload.",
+            "implemented-requirements": [
+              {
+                "uuid": "252d4aea-f7b0-4bc2-af2e-e9f5bd935449",
+                "control-id": "cc6.1",
+                "description": "PHI at rest is encrypted under a customer-managed KMS key (rotation enabled) for both the S3 uploads bucket (GAP-01) and the DynamoDB submissions table (GAP-02), instead of AWS-owned default keys.",
+                "props": [
+                  { "name": "implementation-status", "value": "implemented" },
+                  { "name": "terraform-resource", "value": "aws_kms_key.phi" },
+                  { "name": "terraform-resource", "value": "aws_s3_bucket_server_side_encryption_configuration.uploads" },
+                  { "name": "terraform-resource", "value": "aws_dynamodb_table.intake (server_side_encryption)" }
+                ],
+                "links": [
+                  {
+                    "rel": "evidence",
+                    "href": "s3://cgep-lab-grc-evidence-vault-d267bb51/capstone/runs/27848293937/evidence-27848293937-e42b1096d91908345a654437fae5845aefc9cd56.tar.gz",
+                    "text": "Signed pipeline bundle (terraform plan.json + conftest results). Chain verified via scripts/verify-evidence.sh <run_id> --prefix capstone/runs."
+                  }
+                ]
+              },
+              {
+                "uuid": "22ecaa6f-4a79-40b8-9a51-0f084edc5da5",
+                "control-id": "cc6.3",
+                "description": "The Lambda execution role is scoped to the exact actions the handler performs (dynamodb:PutItem, s3:PutObject, kms:GenerateDataKey/Decrypt) instead of dynamodb:* and s3:* (GAP-07). Enforced at plan time by the gap07_iam_least_priv Rego policy.",
+                "props": [
+                  { "name": "implementation-status", "value": "implemented" },
+                  { "name": "terraform-resource", "value": "aws_iam_role_policy.lambda_inline" }
+                ],
+                "links": [
+                  {
+                    "rel": "evidence",
+                    "href": "s3://cgep-lab-grc-evidence-vault-d267bb51/capstone/runs/27848293937/evidence-27848293937-e42b1096d91908345a654437fae5845aefc9cd56.tar.gz",
+                    "text": "Signed pipeline bundle. Chain verified via scripts/verify-evidence.sh."
+                  }
+                ]
+              },
+              {
+                "uuid": "ff1cc30d-84ed-4159-8c39-fc4cf9e4e8a3",
+                "control-id": "cc6.6",
+                "description": "The intake Lambda runs inside the VPC's private subnets behind a dedicated egress-only security group, reaching AWS services via S3/DynamoDB gateway endpoints and a KMS interface endpoint instead of the public internet (GAP-05). Enforced by the gap05_lambda_vpc Rego policy.",
+                "props": [
+                  { "name": "implementation-status", "value": "implemented" },
+                  { "name": "terraform-resource", "value": "aws_lambda_function.intake (vpc_config)" },
+                  { "name": "terraform-resource", "value": "aws_security_group.lambda" },
+                  { "name": "terraform-resource", "value": "aws_vpc_endpoint.s3" },
+                  { "name": "terraform-resource", "value": "aws_vpc_endpoint.dynamodb" },
+                  { "name": "terraform-resource", "value": "aws_vpc_endpoint.kms" }
+                ],
+                "links": [
+                  {
+                    "rel": "evidence",
+                    "href": "s3://cgep-lab-grc-evidence-vault-d267bb51/capstone/runs/27848293937/evidence-27848293937-e42b1096d91908345a654437fae5845aefc9cd56.tar.gz",
+                    "text": "Signed pipeline bundle. Chain verified via scripts/verify-evidence.sh."
+                  }
+                ]
+              },
+              {
+                "uuid": "b82a5003-443c-4b1b-99fb-f092c318e01c",
+                "control-id": "cc6.7",
+                "description": "The S3 uploads bucket denies any request not using TLS via a bucket policy condition on aws:SecureTransport = false (GAP-03). Enforced by the gap03_s3_tls Rego policy.",
+                "props": [
+                  { "name": "implementation-status", "value": "implemented" },
+                  { "name": "terraform-resource", "value": "aws_s3_bucket_policy.uploads_tls_only" }
+                ],
+                "links": [
+                  {
+                    "rel": "evidence",
+                    "href": "s3://cgep-lab-grc-evidence-vault-d267bb51/capstone/runs/27848293937/evidence-27848293937-e42b1096d91908345a654437fae5845aefc9cd56.tar.gz",
+                    "text": "Signed pipeline bundle. Chain verified via scripts/verify-evidence.sh."
+                  }
+                ]
+              },
+              {
+                "uuid": "effc8925-2e3e-40f7-b6af-3cd6c1947a8d",
+                "control-id": "a1.2",
+                "description": "The S3 uploads bucket has versioning enabled so PHI overwrites are recoverable (GAP-04). Enforced by the gap04_s3_versioning Rego policy, which is the control the red demonstration PR intentionally violated to prove the gate blocks.",
+                "props": [
+                  { "name": "implementation-status", "value": "implemented" },
+                  { "name": "terraform-resource", "value": "aws_s3_bucket_versioning.uploads" }
+                ],
+                "links": [
+                  {
+                    "rel": "evidence",
+                    "href": "s3://cgep-lab-grc-evidence-vault-d267bb51/capstone/runs/27848293937/evidence-27848293937-e42b1096d91908345a654437fae5845aefc9cd56.tar.gz",
+                    "text": "Signed pipeline bundle. Chain verified via scripts/verify-evidence.sh."
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

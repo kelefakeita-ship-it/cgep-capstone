@@ -1,0 +1,3 @@
+VALID: Model D:\terraform\oscal\catalogs\soc2-tsc\catalog.json passed the Validator to confirm the model passes all registered validation tests.
+VALID: Model D:\terraform\oscal\component-definitions\capstone-system\component-definition.json passed the Validator to confirm the model passes all registered validation tests.
+VALID: Model D:\terraform\oscal\profiles\capstone-soc2\profile.json passed the Validator to confirm the model passes all registered validation tests.

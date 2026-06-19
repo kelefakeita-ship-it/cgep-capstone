@@ -1,0 +1,20 @@
+{
+  "profile": {
+    "uuid": "dfa574bd-7ffb-4be3-b2eb-55f08e48c0de",
+    "metadata": {
+      "title": "Acme Health capstone - SOC 2 control selection",
+      "last-modified": "2026-06-19T21:00:00.000000+00:00",
+      "version": "1.0.0",
+      "oscal-version": "1.2.1"
+    },
+    "imports": [
+      {
+        "href": "trestle://catalogs/soc2-tsc/catalog.json",
+        "include-controls": [
+          { "with-ids": ["cc6.1", "cc6.3", "cc6.6", "cc6.7", "a1.2"] }
+        ]
+      }
+    ],
+    "merge": { "as-is": true }
+  }
+}
